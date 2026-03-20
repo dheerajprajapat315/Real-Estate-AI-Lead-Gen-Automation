@@ -1,0 +1,705 @@
+{
+  "name": "Real state 1",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/incoming-lead",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "e961aefe-3a66-4d42-8e1d-24fcd9b9a4fd",
+      "name": "Webhook1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        -64
+      ],
+      "webhookId": "8d4a6396-a83d-4b58-bc39-2cddad787086"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "name",
+              "value": "={{ $json.body.data.fields[0].value }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "user_message",
+              "value": "={{ $json.body.data.fields[6].value }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "phone",
+              "value": "={{ $json.body.data.fields[2].value }}",
+              "type": "string"
+            },
+            {
+              "id": "473e36a4-9c4f-4431-be7c-95c25818d437",
+              "name": "city",
+              "value": "={{ $json.body.data.fields[5].value }}",
+              "type": "string"
+            },
+            {
+              "id": "abe2727d-4fa7-4336-bd59-1d26ce042036",
+              "name": "email",
+              "value": "={{ $json.body.data.fields[1].value }}",
+              "type": "string"
+            },
+            {
+              "id": "7d0091c2-f9cf-4c34-b1b4-8b0615b4d4c3",
+              "name": "Property Type",
+              "value": "={{ $json.body.data.fields[4].value[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "bfaaac6f-f7aa-4602-9423-2c28c824d61e",
+              "name": "budget range",
+              "value": "={{ $json.body.data.fields[3].value[0] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b91ee732-afc6-4953-9a92-4e1a0778607c",
+      "name": "Rename / Map Fields1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.user_message }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "aecee19c-e13a-44da-bbb9-751d441ee377",
+      "name": "Validation1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        496,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Clean text by removing extra spaces, special characters, and converting to lowercase\nconst item = $input.item.json;\n\n// Function to clean text\nfunction cleanText(text) {\n  if (typeof text !== 'string') {\n    return text;\n  }\n  \n  return text\n    .toLowerCase() // Convert to lowercase\n    .replace(/[^a-z0-9\\s]/g, ' ') // Remove special characters, keep alphanumeric and spaces\n    .replace(/\\s+/g, ' ') // Replace multiple spaces with single space\n    .trim(); // Remove leading/trailing spaces\n}\n\n// Clean all text fields in the item\nconst cleanedItem = {};\n\nfor (const key in item) {\n  if (typeof item[key] === 'string') {\n    cleanedItem[key] = cleanText(item[key]);\n  } else {\n    cleanedItem[key] = item[key];\n  }\n}\n\nreturn cleanedItem;"
+      },
+      "id": "ad6cfdaf-c884-4bbe-98fc-faa24a9ad9c0",
+      "name": "Clean Text1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst output = [];\n\nfor (const item of items) {\n\n  try {\n\n    // AI JSON clean\n    let aiText = item.json.output.replace(/```json|```/g, \"\").trim();\n    const parsedData = JSON.parse(aiText);\n\n    // Extract fields\n    let budgetRaw = parsedData.budget_range || \"not sure\";\n    let budgetLower = budgetRaw.toLowerCase();\n\n    let urgencyRaw = (parsedData.urgency_level || \"low\").toLowerCase().trim();\n\n    // 🔥 USA Budget Based Urgency Override\n\n    if (budgetLower.includes(\"$2m\")) {\n\n      urgencyRaw = \"high\";\n\n    }\n\n    else if (budgetLower.includes(\"$1.2m\")) {\n\n      if (urgencyRaw === \"low\") urgencyRaw = \"medium\";\n\n    }\n\n    else if (budgetLower.includes(\"$800k\")) {\n\n      if (urgencyRaw === \"low\") urgencyRaw = \"medium\";\n\n    }\n\n    // City Clean\n    const finalCity =\n      item.json.city ||\n      parsedData.location ||\n      \"Not specified\";\n\n    // Property clean\n    const propertyType =\n      parsedData.property_type ||\n      \"Not specified\";\n\n    output.push({\n\n      json: {\n\n        intent: \"buyer\",\n\n        location: finalCity,\n\n        urgency: urgencyRaw,\n\n        property: propertyType,\n\n        budget_range: budgetRaw,\n\n        // Flags\n        is_high_urgency: urgencyRaw === \"high\",\n\n        is_medium_urgency: urgencyRaw === \"medium\",\n\n        is_buyer: true\n\n      }\n\n    });\n\n  }\n\n  catch (e) {\n\n    output.push({\n\n      json: {\n\n        error: \"AI response parsing failed\",\n\n        raw_output: item.json.output\n\n      }\n\n    });\n\n  }\n\n}\n\nreturn output;"
+      },
+      "id": "4fbe274e-4b66-45f2-8aed-a6e7806c8528",
+      "name": "Extract AI Response1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "76fac310-8df8-413c-b67b-99842092dca5",
+              "name": "Name",
+              "value": "={{ $('Clean Text1').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "a30be83d-74fd-4d70-9d89-1ffb75532fc6",
+              "name": "intent",
+              "value": "={{ $json.intent }}",
+              "type": "string"
+            },
+            {
+              "id": "1c5dfd0d-e10a-40b4-822b-08d56842b9d9",
+              "name": "location",
+              "value": "={{ $json.location }}",
+              "type": "string"
+            },
+            {
+              "id": "f6a32721-c64a-435b-8c7e-f4cc5036d2cf",
+              "name": "property",
+              "value": "={{ $json.property }}",
+              "type": "string"
+            },
+            {
+              "id": "fbf5d6e2-d6b3-4523-84fd-c9d0e5ac89fc",
+              "name": "urgency",
+              "value": "={{ $json.urgency }}",
+              "type": "string"
+            },
+            {
+              "id": "7fe4ad65-87a2-46df-9803-25659b15d6b0",
+              "name": "budget_range",
+              "value": "={{ $json.budget_range }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "30690573-d0c8-4a8c-b3f2-7d7ecf7ed913",
+      "name": "Standardize Fields1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1456,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://jsonplaceholder.typicode.com/posts/1",
+        "options": {}
+      },
+      "id": "32ec1829-6b21-4af3-8bc7-f640c012fe3c",
+      "name": "Property Check1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1824,
+        1344
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all(); \nconst result = [];\n\nconst today = new Date();\nconst formattedDate =\ntoday.getDate().toString().padStart(2,'0') + '-' +\n(today.getMonth()+1).toString().padStart(2,'0') + '-' +\ntoday.getFullYear();\n\nconst data = items[0].json; \nlet score = 0;\n\nconst budget = (data.budget_range || \"\").toLowerCase().trim();\nconst urgency = (data.urgency || \"low\").toLowerCase().trim();\nconst property = (data.property || \"\").toLowerCase().trim();\nconst city = (data.location || \"\").toLowerCase().trim();\n\n\n// 💰 USA Budget Scoring\n\nif (budget.includes('$2m')) score += 45;\n\nelse if (budget.includes('$1.2m')) score += 40;\n\nelse if (budget.includes('$800k')) score += 30;\n\nelse if (budget.includes('$500k')) score += 20;\n\nelse if (budget.includes('below $500k')) score += 10;\n\nelse score += 10;\n\n\n// 📍 Location Scoring (High demand US markets)\n\nif (\ncity.includes('new york') ||\ncity.includes('manhattan') ||\ncity.includes('los angeles') ||\ncity.includes('san francisco')\n) score += 30;\n\nelse if (\ncity.includes('miami') ||\ncity.includes('austin') ||\ncity.includes('dallas') ||\ncity.includes('san diego')\n) score += 25;\n\nelse if (\ncity.includes('phoenix') ||\ncity.includes('seattle') ||\ncity.includes('denver')\n) score += 20;\n\nelse score += 10;\n\n\n// 🏠 Property Type Scoring\n\nif (property.includes('Single Family Home')) score += 20;\n\nelse if (property.includes('Townhouse')) score += 18;\n\nelse if (property.includes('Condo ') || property.includes('Apartment')) score += 15;\n\nelse if (property.includes('Commercial Property')) score += 12;\n\nelse score += 5;\n\n\n// 🚀 Urgency Scoring\n\nif (urgency === 'high') score += 15;\n\nelse if (urgency === 'medium') score += 10;\n\nelse score += 5;\n\n\n// 🔥 Lead Category Logic\n\nlet category = \"COLD\";\nlet priority = \"LOW\";\n\nif (score >= 85) {\n\ncategory = \"HOT\";\npriority = \"HIGH\";\n\n}\n\nelse if (score >= 60) {\n\ncategory = \"WARM\";\npriority = \"MEDIUM\";\n\n}\n\nelse {\n\ncategory = \"COLD\";\npriority = \"LOW\";\n\n}\n\n\n// Output\n\nresult.push({\n  json: {\n    ...data,\n    lead_score: score,\n    lead_category: category,\n    priority: priority,\n    submission_date: formattedDate\n  }\n});\n\nreturn result;"
+      },
+      "id": "b12e6f73-46e6-4b77-b0dc-3c8ff2809895",
+      "name": "Lead Scoring Logic1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1712,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "name",
+              "value": "={{ $('Webhook1').item.json.body.data.fields[0].value }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "phone",
+              "value": "={{ $('Rename / Map Fields1').item.json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "intent",
+              "value": "={{ $('Extract AI Response1').item.json.intent }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "urgency",
+              "value": "={{ $('Extract AI Response1').item.json.urgency }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "city",
+              "value": "={{ $('Extract AI Response1').item.json.location }}",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "property type",
+              "value": "={{ $('Extract AI Response1').item.json.property }}",
+              "type": "string"
+            },
+            {
+              "id": "id-7",
+              "name": "lead_score",
+              "value": "={{ $json.lead_score }}",
+              "type": "number"
+            },
+            {
+              "id": "id-8",
+              "name": "lead_status",
+              "value": "={{ $node[\"Lead Scoring Logic1\"].json.lead_category }}",
+              "type": "string"
+            },
+            {
+              "id": "4bda89ff-b93e-4d3f-90d1-07dc31e32a9d",
+              "name": "Email",
+              "value": "={{ $('Webhook1').item.json.body.data.fields[1].value }}",
+              "type": "string"
+            },
+            {
+              "id": "cac2e626-ba2d-4f71-9252-44fe480b7d5d",
+              "name": "budget range",
+              "value": "={{ $('Standardize Fields1').item.json.budget_range }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "33a39142-af17-4821-80bd-7e8f08cb5edd",
+      "name": "Final Structured Lead Object1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2144,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a US-based real estate lead qualification AI.\nAnalyze the lead data and return a STRICT JSON object.\nNever return null values. Return ONLY valid JSON. No explanations.\n\n### DECODING RULES (CRITICAL):\n1. PROPERTY TYPE: Use 'Property ID' to determine 'property_type':\n   - 2f1b5044-112b-4898-8cd4-d9c4812a6dd3 = Condo / Apartment\n   - 428ffe83-7f51-4839-9297-dad5ecbd4c4f = Single Family Home\n   - ab6173ea-7bbc-4496-aa1e-57fd342193f6 = Townhouse\n   - e2d2358b-ae8e-4e2d-890a-9ae9887337f6 = Commercial Property\n\n2. BUDGET RANGE & URGENCY LOGIC (USD):\n   Decode 'Budget ID' and set 'urgency_level' based on the value:\n   - 1a00f39d-97a8-4a7e-8453-da5f907bf5f5 = $2M+ (Set urgency_level: \"high\")\n   - 74b5f50d-e7bf-4a19-9740-0c51d21e6474 = $1.2M – $2M (Set urgency_level: \"high\") \n   - b041a1ad-d5c2-41bd-831a-607eb5910242 = $800k – $1.2M (Set urgency_level: \"medium\")\n   - bd3b2d73-d960-46e8-ace0-352437e80625 = $500k – $800k (Set urgency_level: \"medium\")\n   - b93c4e18-3e71-4949-ba50-49128f583cf9 = Below $500k (Set urgency_level: \"low\")\n   - 95fab341-8152-4130-bc6b-404823263693 = Not Sure (Set urgency_level: \"low\")\n\n   *NOTE: If Budget is $1.2M or more, ALWAYS set urgency_level to \"high\".*\n\n3. LOCATION: ALWAYS use 'Input_City'. If missing, extract from Message. Format as \"City, USA\".\n\n### Required JSON fields:\n- lead_type: (Always \"buyer\")\n- property_type: (Decoded US name)\n- location: (Input_City)\n- budget_range: (The decoded range like \"$1.2M – $2M\")\n- urgency_level: (low / medium / high)\n- specific_requirements: (array of strings from Message)\n\n### Lead Details:\nName: {{ $json.name }}\nInput_City: {{ $json[\"city\"] }}\nProperty ID: {{ $json['Property Type'] }}\nBudget ID: {{ $json[\"budget range\"] }}\nMessage: {{ $json[\"user_message\"] }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        896,
+        -64
+      ],
+      "id": "d18b74c3-2ac1-4e69-a662-2f0e4fcbbf69",
+      "name": "AI Agent1",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "notes": "You are a real estate lead qualification AI. Analyze the user message and extract:  (buyer/renter), property_type, location, budget_range, and urgency (low/medium/high). Return the output strictly in JSON format."
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1jCv-Lyom71QDSfxrUmvGsLBSlCVoW1a6xUoM6vZFKBk",
+          "mode": "list",
+          "cachedResultName": "Real Estate AI Lead",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jCv-Lyom71QDSfxrUmvGsLBSlCVoW1a6xUoM6vZFKBk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jCv-Lyom71QDSfxrUmvGsLBSlCVoW1a6xUoM6vZFKBk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Phone": "='{{ $json.phone.toString() }}",
+            "Intent": "={{ $json.intent }}",
+            "City": "={{ $json.city }}",
+            "Property Type": "={{ $json['property type'] }}",
+            "Score ": "={{ $json.lead_score }}",
+            "Status": "={{ $json.lead_status }}",
+            "Date": "={{ $('Lead Scoring Logic1').item.json.submission_date }}",
+            "Name": "={{ $json.name }}",
+            "Email": "={{ $json.Email }}",
+            "budget_range": "={{ $json['budget range'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Intent",
+              "displayName": "Intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "City",
+              "displayName": "City",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Property Type",
+              "displayName": "Property Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Score ",
+              "displayName": "Score ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "budget_range",
+              "displayName": "budget_range",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2352,
+        -64
+      ],
+      "id": "f5d6b687-657a-4c6a-8162-de64b924c6c0",
+      "name": "Append row in sheet1",
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3m1uQZygYZerChaR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://manishdkp.app.n8n.cloud/webhook/qualified-lead",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "Name",
+              "value": "={{ $json.Name }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $json.Phone }}"
+            },
+            {
+              "name": "lead_status",
+              "value": "={{ $json.Status }}"
+            },
+            {
+              "name": "city",
+              "value": "={{ $json.City }}"
+            },
+            {
+              "name": "intent",
+              "value": "={{ $json.Intent }}"
+            },
+            {
+              "name": "property type",
+              "value": "={{ $json['Property Type'] }}"
+            },
+            {
+              "name": "lead_score",
+              "value": "={{ $json['Score '] }}"
+            },
+            {
+              "name": "user_message",
+              "value": "={{ $('Webhook1').item.json.body.data.fields[6].value }}"
+            },
+            {
+              "name": "Email",
+              "value": "={{ $json.Email }}"
+            },
+            {
+              "name": "budget range",
+              "value": "={{ $json.budget_range }}"
+            },
+            {
+              "name": "=urgency",
+              "value": "={{ $('Final Structured Lead Object1').item.json.urgency }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2560,
+        -64
+      ],
+      "id": "1e815b89-75b3-4838-8c05-8d42386366eb",
+      "name": "HTTP Request1",
+      "alwaysOutputData": true,
+      "executeOnce": false,
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        864,
+        224
+      ],
+      "id": "5eaf0deb-607a-49c9-8214-3e3f5f5c9f6f",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "j7MKs5soCRLLJsuH",
+          "name": "OpenAi account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Rename / Map Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rename / Map Fields1": {
+      "main": [
+        [
+          {
+            "node": "Validation1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation1": {
+      "main": [
+        [
+          {
+            "node": "Clean Text1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Text1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract AI Response1": {
+      "main": [
+        [
+          {
+            "node": "Standardize Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Standardize Fields1": {
+      "main": [
+        [
+          {
+            "node": "Lead Scoring Logic1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Property Check1": {
+      "main": [
+        []
+      ]
+    },
+    "Lead Scoring Logic1": {
+      "main": [
+        [
+          {
+            "node": "Final Structured Lead Object1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Structured Lead Object1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Extract AI Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "nhzbDxTw2tJ5WmIu",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "5054c926-0490-4011-9137-36ab2deaf3fa",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9eb1a08928bea16ca794705a17a5bc2583c09456fb23f5a98c62ffa2e707056c"
+  },
+  "id": "6CIJxdDuEYYdXGYK",
+  "tags": []
+}
