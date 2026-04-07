@@ -3,113 +3,16 @@
   "nodes": [
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://manishdkp.app.n8n.cloud/webhook-test/lead-analytics",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "full_name",
-              "value": "={{ $('Receive Qualified Lead1').item.json.body.Name }}"
-            },
-            {
-              "name": "city",
-              "value": "={{ $('Receive Qualified Lead1').item.json.body.city }}"
-            },
-            {
-              "name": "assigned_team"
-            },
-            {
-              "name": "priority_type",
-              "value": "={{ $('Receive Qualified Lead1').item.json.body['property type'] }}"
-            },
-            {
-              "name": "response_time_sla"
-            },
-            {
-              "name": "Phone",
-              "value": "={{ $('Receive Qualified Lead1').item.json.body.phone }}"
-            },
-            {
-              "name": "Status",
-              "value": "={{ $('Receive Qualified Lead1').item.json.body.lead_status }}"
-            },
-            {
-              "name": "intent",
-              "value": "={{ $('Receive Qualified Lead1').item.json.body.intent }}"
-            },
-            {
-              "name": "user_message",
-              "value": "={{ $('Receive Qualified Lead1').item.json.body.user_message }}"
-            },
-            {
-              "name": "email",
-              "value": "={{ $('Receive Qualified Lead1').item.json.body.Email }}"
-            },
-            {
-              "name": "lead_score",
-              "value": "={{ $('Receive Qualified Lead1').item.json.body.lead_score }}"
-            },
-            {
-              "name": "Budget_range",
-              "value": "={{ $('Receive Qualified Lead1').item.json.body['budget range'] }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [
-        928,
-        352
-      ],
-      "id": "5a1624b8-e18a-40e9-a8b3-325774e68fb7",
-      "name": "HTTP Request"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.whatsapp.example.com/send",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer <__PLACEHOLDER_VALUE__YOUR_WHATSAPP_API_TOKEN__>"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"phone\": \"{{ $json.phone }}\",\n  \"message\": \"{{ $json.message }}\",\n  \"lead_status\": \"{{ $json.lead_status }}\",\n  \"priority\": \"{{ $json.priority }}\"\n}",
-        "options": {}
-      },
-      "id": "80ea0a9f-916d-4367-aa8d-9ba0b6340b11",
-      "name": "WhatsApp API (Optional)1",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [
-        -864,
-        -160
-      ]
-    },
-    {
-      "parameters": {
         "mode": "runOnceForEachItem",
         "jsCode": "// COLD Lead Strategy - Soft educational message\nconst item = $input.item.json;\n\nreturn {\n  ...item,\n  follow_up_type: 'whatsapp',\n  tone: 'soft',\n  priority: 'low',\n  action: 'nurture',\n  strategy_notes: 'COLD lead - Low urgency. Send educational content and wait for engagement.'\n};"
       },
-      "id": "724b1f31-10ab-4dd7-b324-0b1a9478bf65",
-      "name": "COLD Lead Strategy1",
+      "id": "f0a1a9c2-2ab0-42c0-bc16-909f142f8a05",
+      "name": "COLD Lead Strategy",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        176,
-        1008
+        416,
+        384
       ]
     },
     {
@@ -117,13 +20,13 @@
         "mode": "runOnceForEachItem",
         "jsCode": "// WARM Lead Strategy - Polite follow-up\nconst item = $input.item.json;\n\nreturn {\n  ...item,\n  follow_up_type: 'whatsapp',\n  tone: 'polite',\n  priority: 'medium',\n  action: 'schedule_call',\n  strategy_notes: 'WARM lead - Interested but not urgent. Polite WhatsApp message with call scheduling.'\n};"
       },
-      "id": "9eb54bb4-3dd6-4a61-9983-a33a23363377",
-      "name": "WARM Lead Strategy1",
+      "id": "2ac5786e-2edb-4821-b791-340ea15d6ce9",
+      "name": "WARM Lead Strategy",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        176,
-        816
+        416,
+        192
       ]
     },
     {
@@ -131,13 +34,13 @@
         "mode": "runOnceForEachItem",
         "jsCode": "// HOT Lead Strategy - Instant follow-up\nconst item = $input.item.json;\n\nreturn {\n  ...item,\n  follow_up_type: 'whatsapp',\n  tone: 'urgent',\n  priority: 'high',\n  action: 'immediate_call',\n  strategy_notes: 'HOT lead - High intent buyer. Immediate WhatsApp + Call required.'\n};"
       },
-      "id": "8df9251a-f68f-45c3-8a6b-f6ccef9f241f",
-      "name": "HOT Lead Strategy1",
+      "id": "35b6ff53-e0a5-4d53-86f6-e5f53cb16813",
+      "name": "HOT Lead Strategy",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        176,
-        624
+        416,
+        0
       ]
     },
     {
@@ -154,7 +57,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ $('Receive Qualified Lead1').item.json.body.lead_status }}",
+                    "leftValue": "={{ $('Receive Qualified Lead').item.json.body.lead_status }}",
                     "rightValue": "HOT",
                     "operator": {
                       "type": "string",
@@ -178,7 +81,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ $('Receive Qualified Lead1').item.json.body.lead_status }}",
+                    "leftValue": "={{ $('Receive Qualified Lead').item.json.body.lead_status }}",
                     "rightValue": "WARM",
                     "operator": {
                       "type": "string",
@@ -202,7 +105,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ $('Receive Qualified Lead1').item.json.body.lead_status }}",
+                    "leftValue": "={{ $('Receive Qualified Lead').item.json.body.lead_status }}",
                     "rightValue": "COLD",
                     "operator": {
                       "type": "string",
@@ -220,13 +123,13 @@
         },
         "options": {}
       },
-      "id": "e315897f-bb24-43c8-a099-311a33ec89fa",
-      "name": "Route by Lead Status1",
+      "id": "e9cd5070-b5cd-4be0-b1d9-d658c58b47c3",
+      "name": "Route by Lead Status",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        -48,
-        800
+        192,
+        176
       ]
     },
     {
@@ -286,18 +189,24 @@
               "name": "Email",
               "value": "={{ $json.body.Email }}",
               "type": "string"
+            },
+            {
+              "id": "cb75ace5-f9e2-4d74-b12e-90eb534c827a",
+              "name": "user_message",
+              "value": "={{ $json.body.user_message }}",
+              "type": "string"
             }
           ]
         },
         "options": {}
       },
-      "id": "7ff9b73e-4e20-440c-a937-2681d06a6599",
-      "name": "Workflow Configuration2",
+      "id": "57170d18-1b8b-4c18-bb45-b6dea507d098",
+      "name": "Workflow Configuration",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -624,
-        816
+        -16,
+        192
       ]
     },
     {
@@ -307,628 +216,179 @@
         "responseMode": "lastNode",
         "options": {}
       },
-      "id": "ad7d9949-8ba1-4531-aca1-9306c8614af9",
-      "name": "Receive Qualified Lead1",
+      "id": "182c21b6-c2ec-41a7-9ccc-6137c453fc94",
+      "name": "Receive Qualified Lead",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -848,
-        816
+        -240,
+        192
       ],
       "webhookId": "e497f393-b771-4c6b-9ce4-175b346ee98f"
     },
     {
       "parameters": {
-        "promptType": "define",
-        "text": "=You are an expert Real Estate Sales Assistant based in the USA.\n\nLead Data:\n- Name: {{ $json.name }}\n- City: {{ $json.city }}\n- Property Type: {{ $json.property_type }}\n- Lead Status: {{ $json.lead_status }}\n- Tone: {{ $json.tone }}\n\nTask: Write a professional, friendly email based on the lead status.\n\nFor COLD leads:\n- Subject: Make it helpful (e.g., \"Resources for your {{ $json.city }} property search\")\n- Tone: Helpful, not pushy. Do not ask for a call immediately.\n- Content: Acknowledge their interest in {{ $json.property_type }}. Mention that real estate is a big decision and offer a \"Buyer's Guide\" or a list of similar properties in {{ $json.city }}.\n- CTA: Ask them to reply if they have any specific questions.\n- Keep it under 150 words. Do not use \"Dear\" (use \"Hi\" or \"Hello\").\n- Professional sign-off.\n\nFor WARM leads:\n- Polite, professional tone\n- Offer to schedule a call\n- Mention property type and city\n\nFor HOT leads:\n- Urgent, action-oriented tone\n- Immediate call to action\n- Emphasize availability\n\nReturn the response as a JSON object with the field \"ai_generated_message\".",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
-      "position": [
-        -400,
-        816
-      ],
-      "id": "6cf23f91-e25f-4d3b-8f3f-a47ccb91b368",
-      "name": "AI Agent1"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://graph.facebook.com/v22.0/996236496911822/messages",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "Bearer EAAaXwYBfXtsBQ7T9XHxhPPTrBWr7VeN1R8zo4XZCDlAeK31JQEJ6QAWFoJmKbPP45AntfCiA3wjbLyIcUXPsqd7oyn049f6r9qjMhPwZANlEbr43srsWUXfM4H13cjsGr3taALb6DbZBkBhPgu7nEGvE7ls7wSBpPoXKrX09lafcqDSttifsQN3cejFvQZDZD"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"917976680970\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"hot_lead_alert\",\n    \"language\": {\n      \"code\": \"en_US\"\n    },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"text\": \"{{ $('Receive Qualified Lead1').item.json.body.Name }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $('Receive Qualified Lead1').item.json.body.city }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $('Receive Qualified Lead1').item.json.body['budget range'] }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $('Receive Qualified Lead1').item.json.body['property type'] }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $('Receive Qualified Lead1').item.json.body.lead_score }}\" }\n        ]\n      }\n    ]\n  }\n}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        656,
-        272
-      ],
-      "id": "c15aa69c-ca4e-4e08-9c24-9bd2019e3f1f",
-      "name": "HTTP Request2"
-    },
-    {
-      "parameters": {
         "sendTo": "Dheerajprajapat315@gmail.com",
-        "subject": "=❄️ Cold Lead Detail: {{ $('Receive Qualified Lead1').item.json.body.Name }}",
-        "message": "=COLD LEAD ALERT<br><br>\nClient Name: {{ $('Receive Qualified Lead1').item.json.body.Name }}<br>\nPhone: {{ $('Receive Qualified Lead1').item.json.body.phone }}<br>\nCity: {{ $('Receive Qualified Lead1').item.json.body.city }}<br>\nBudget: {{ $('Receive Qualified Lead1').item.json.body['budget range'] }}<br>\nProperty Type: {{ $('Receive Qualified Lead1').item.json.body['property type'] }}<br>\nLead Score: {{ $('Receive Qualified Lead1').item.json.body.lead_score }}<br><br>\n👉 Action: Follow up later or nurture this lead.",
+        "subject": "=❄️ Cold Lead Detail: {{ $('Receive Qualified Lead').item.json.body.Name }}",
+        "message": "=COLD LEAD ALERT<br><br>\nClient Name: {{ $('Receive Qualified Lead').item.json.body.Name }}<br>\nPhone: {{ $('Receive Qualified Lead').item.json.body.phone }}<br>\nEmail: {{ $('Workflow Configuration').item.json.Email }}<br>\nCity: {{ $('Receive Qualified Lead').item.json.body.city }}<br>\nBudget: {{ $('Receive Qualified Lead').item.json.body['budget range'] }}<br>\nProperty Type: {{ $('Receive Qualified Lead').item.json.body['property type'] }}<br>\nLead Score: {{ $('Receive Qualified Lead').item.json.body.lead_score }}<br>\nUser message: {{ $('Receive Qualified Lead').item.json.body.user_message ? $('Receive Qualified Lead').item.json.body.user_message : \"User message not write\" }}<br><br>\n👉 Action: Follow up later or nurture this lead.",
         "options": {}
       },
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        400,
-        1008
-      ],
-      "id": "7eada764-7fef-4747-a816-f2648c7de1f3",
-      "name": "Send a message1",
-      "webhookId": "0eeaa57c-efa2-4019-8faa-0701214c73f2",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "r7ZtcAbKfa1wDFCM",
-          "name": "Gmail account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "996236496911822",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "Bearer ACCESS_TOKEN"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $node[\\\"HOT Lead Strategy1\\\"].json[\\\"phone\\\"] }}\", \n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"🚨 *URGENT: NEW HOT LEAD* 🚨\\n\\n👤 *Name:* {{ $node[\\\"HOT Lead Strategy1\\\"].json[\\\"name\\\"] }}\\n📍 *City:* {{ $node[\\\"HOT Lead Strategy1\\\"].json[\\\"city\\\"] }}\\n💰 *Budget:* {{ $node[\\\"HOT Lead Strategy1\\\"].json[\\\"budget_range\\\"] }}\\n🏠 *Property:* {{ $node[\\\"HOT Lead Strategy1\\\"].json[\\\"property\\\"] }}\\n\\n⚡ *Action:* Call them immediately to secure the deal!\"\n  }\n}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        -864,
-        64
-      ],
-      "id": "7a3ba02d-5978-49bf-85e0-ec846bc2c905",
-      "name": "HTTP Request3"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "7beb4011-a35f-4264-8175-37d90f2081d4",
-              "leftValue": "",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "equals",
-                "name": "filter.operator.equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        -864,
-        -384
-      ],
-      "id": "7aca01f6-6f16-4815-8046-617dbd6bf5b6",
-      "name": "If"
-    },
-    {
-      "parameters": {
-        "mode": "chooseBranch",
-        "numberInputs": 3,
-        "useDataOfInput": "={{ $input.index }}"
-      },
-      "id": "bc7c46ed-008c-4595-b5f1-a1f9301e1265",
-      "name": "Merge All Strategies1",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        1120,
-        -144
-      ],
-      "alwaysOutputData": true,
-      "executeOnce": false
-    },
-    {
-      "parameters": {
-        "numberInputs": 3
-      },
-      "id": "efae3da7-0aae-41e2-a9cf-1b874164cf7d",
-      "name": "Merge All Strategies",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3,
-      "position": [
-        1200,
-        -80
-      ],
-      "alwaysOutputData": true
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://graph.facebook.com/v22.0/996236496911822/messages",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "Bearer EAAaXwYBfXtsBQ7T9XHxhPPTrBWr7VeN1R8zo4XZCDlAeK31JQEJ6QAWFoJmKbPP45AntfCiA3wjbLyIcUXPsqd7oyn049f6r9qjMhPwZANlEbr43srsWUXfM4H13cjsGr3taALb6DbZBkBhPgu7nEGvE7ls7wSBpPoXKrX09lafcqDSttifsQN3cejFvQZDZD"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"917976680970\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"warm_lead_alert\",\n    \"language\": {\n      \"code\": \"en\"\n    },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"text\": \"{{ $('Receive Qualified Lead1').item.json.body.Name }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $('Receive Qualified Lead1').item.json.body.city }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $('Receive Qualified Lead1').item.json.body['budget range'] }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $('Receive Qualified Lead1').item.json.body['property type'] }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $('Receive Qualified Lead1').item.json.body.lead_score }}\" }\n        ]\n      }\n    ]\n  }\n}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        1200,
+        640,
         384
       ],
-      "id": "12c7dee7-d4b4-437e-bf22-a80b0302f0da",
-      "name": "HTTP Request5"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://graph.facebook.com/v22.0/1614775323175312/messages",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "Bearer EAAaXwYBfXtsBQ7T9XHxhPPTrBWr7VeN1R8zo4XZCDlAeK31JQEJ6QAWFoJmKbPP45AntfCiA3wjbLyIcUXPsqd7oyn049f6r9qjMhPwZANlEbr43srsWUXfM4H13cjsGr3taALb6DbZBkBhPgu7nEGvE7ls7wSBpPoXKrX09lafcqDSttifsQN3cejFvQZDZD"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"917976680970\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"lead_alert_v1\",\n    \"language\": {\n      \"code\": \"en\"\n    }\n  }\n}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        720,
-        128
-      ],
-      "id": "f115f826-65c4-4c4d-995b-b692b6f7263c",
-      "name": "HTTP Request6"
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "gpt-4o-mini",
-          "mode": "list",
-          "cachedResultName": "gpt-4o-mini"
-        },
-        "builtInTools": {},
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.3,
-      "position": [
-        -464,
-        1072
-      ],
-      "id": "71dce726-737a-4b97-b9f8-010b6430f7bf",
-      "name": "OpenAI Chat Model",
+      "id": "c8ff9cba-0d46-4c08-b196-ef57967b4393",
+      "name": "Send a message",
+      "webhookId": "0eeaa57c-efa2-4019-8faa-0701214c73f2",
       "credentials": {
-        "openAiApi": {
-          "id": "j7MKs5soCRLLJsuH",
-          "name": "OpenAi account 2"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "phoneNumberId": "1067732049752142",
-        "recipientPhoneNumber": "917976680970",
-        "template": "lead_alert_v2|en_US",
-        "components": {
-          "component": [
-            {
-              "bodyParameters": {
-                "parameter": [
-                  {
-                    "text": "={{ $('Receive Qualified Lead1').item.json.body.Name }}"
-                  },
-                  {
-                    "text": "={{ $('Receive Qualified Lead1').item.json.body.city }}"
-                  },
-                  {
-                    "text": "={{ $('Receive Qualified Lead1').item.json.body['budget range'] }}"
-                  },
-                  {
-                    "text": "={{ $('Receive Qualified Lead1').item.json.body['property type'] }}"
-                  },
-                  {
-                    "text": "={{ $('Receive Qualified Lead1').item.json.body.lead_score }}"
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.whatsApp",
-      "typeVersion": 1.1,
-      "position": [
-        144,
-        64
-      ],
-      "id": "34139b93-ed86-420f-a5d1-f53a2b8be48d",
-      "name": "Send template",
-      "webhookId": "f48b3b34-d287-4907-9b6e-ce56b60d76b4",
-      "credentials": {
-        "whatsAppApi": {
-          "id": "YD2TKkuqApVSzuui",
-          "name": "WhatsApp account 4"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "phoneNumberId": "996236496911822",
-        "recipientPhoneNumber": "917976680970",
-        "template": "lead_alert_v1|en_US",
-        "components": {
-          "component": [
-            {
-              "bodyParameters": {
-                "parameter": [
-                  {
-                    "text": "={{ $('Receive Qualified Lead1').item.json.body.Name }}"
-                  },
-                  {
-                    "text": "={{ $('Receive Qualified Lead1').item.json.body.city }}"
-                  },
-                  {
-                    "text": "={{ $('Receive Qualified Lead1').item.json.body['budget range'] }}"
-                  },
-                  {
-                    "text": "={{ $('Receive Qualified Lead1').item.json.body['property type'] }}"
-                  },
-                  {
-                    "text": "={{ $('Receive Qualified Lead1').item.json.body.lead_score }}"
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.whatsApp",
-      "typeVersion": 1.1,
-      "position": [
-        -160,
-        -320
-      ],
-      "id": "4311a07e-418e-4348-a97a-8bd05e06c713",
-      "name": "Send template2",
-      "webhookId": "f48b3b34-d287-4907-9b6e-ce56b60d76b4",
-      "credentials": {
-        "whatsAppApi": {
-          "id": "YD2TKkuqApVSzuui",
-          "name": "WhatsApp account 4"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "phoneNumberId": "996236496911822",
-        "recipientPhoneNumber": "917976680970",
-        "template": "cold_lead_alert_v2|en_US",
-        "components": {
-          "component": [
-            {
-              "bodyParameters": {
-                "parameter": [
-                  {
-                    "text": "={{ $('Receive Qualified Lead1').item.json.body.Name }}"
-                  },
-                  {
-                    "text": "={{ $('Receive Qualified Lead1').item.json.body.city }}"
-                  },
-                  {
-                    "text": "={{ $('Receive Qualified Lead1').item.json.body['budget range'] }}"
-                  },
-                  {
-                    "text": "={{ $('Receive Qualified Lead1').item.json.body['property type'] }}"
-                  },
-                  {
-                    "text": "={{ $('Receive Qualified Lead1').item.json.body.lead_score }}"
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.whatsApp",
-      "typeVersion": 1.1,
-      "position": [
-        464,
-        1904
-      ],
-      "id": "fed4a857-f6fe-4f60-9022-3614dfd50815",
-      "name": "Send template1",
-      "webhookId": "f48b3b34-d287-4907-9b6e-ce56b60d76b4",
-      "credentials": {
-        "whatsAppApi": {
-          "id": "vej1ybGvVMwxX5oB",
-          "name": "WhatsApp account"
+        "gmailOAuth2": {
+          "id": "9ZjATvpqZlRd4N4E",
+          "name": "Gmail OAuth2 API"
         }
       }
     },
     {
       "parameters": {
         "sendTo": "Dheerajprajapat315@gmail.com",
-        "subject": "=Warm Lead Detail: {{ $('Receive Qualified Lead1').item.json.body.Name }}",
-        "message": "=\nWarm LEAD ALERT\\n\\nClient Name: {{ $('Receive Qualified Lead1').item.json.body.Name }}<br>\nPhone: {{ $('Receive Qualified Lead1').item.json.body.phone }}<br>\nCity: {{ $('Receive Qualified Lead1').item.json.body.city }}<br>\nBudget: {{ $('Receive Qualified Lead1').item.json.body['budget range'] }}<br>\nProperty Type: {{ $('Receive Qualified Lead1').item.json.body['property type'] }}<br>\nLead Score: {{ $('Receive Qualified Lead1').item.json.body.lead_score }}<br><br>\n👉 Action: Reach out soon and share suitable options.",
+        "subject": "=Warm Lead Detail: {{ $('Receive Qualified Lead').item.json.body.Name }}",
+        "message": "=Warm LEAD ALERT<br><br>\n\nClient Name: {{ $('Receive Qualified Lead').item.json.body.Name }}<br>\nPhone: {{ $('Receive Qualified Lead').item.json.body.phone }}<br>\nEmail: {{ $('Workflow Configuration').item.json.Email }}<br>\nCity: {{ $('Receive Qualified Lead').item.json.body.city }}<br>\nBudget: {{ $('Receive Qualified Lead').item.json.body['budget range'] }}<br>\nProperty Type: {{ $('Receive Qualified Lead').item.json.body['property type'] }}<br>\nLead Score: {{ $('Receive Qualified Lead').item.json.body.lead_score }}<br>\n\nUser message: {{ $('Receive Qualified Lead').item.json.body.user_message ? $('Receive Qualified Lead').item.json.body.user_message : \"User message not write\" }} <br><br>\n\n👉 Action: Reach out soon and share suitable options.",
         "options": {}
       },
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        400,
-        816
+        640,
+        192
       ],
-      "id": "93544c0b-1f1f-4af9-a2cd-7abde606339e",
-      "name": "Send a message2",
+      "id": "5714cbdc-9f3f-4e73-8e77-e69512623079",
+      "name": "Send a message4",
       "webhookId": "0eeaa57c-efa2-4019-8faa-0701214c73f2",
       "credentials": {
         "gmailOAuth2": {
-          "id": "r7ZtcAbKfa1wDFCM",
-          "name": "Gmail account"
+          "id": "9ZjATvpqZlRd4N4E",
+          "name": "Gmail OAuth2 API"
         }
       }
     },
     {
       "parameters": {
         "sendTo": "Dheerajprajapat315@gmail.com",
-        "subject": "=HOT Lead Detail: {{ $('Receive Qualified Lead1').item.json.body.Name }}",
-        "message": "=🔥 HOT LEAD ALERT<br><br>\nClient Name: {{ $('Receive Qualified Lead1').item.json.body.Name }}<br>\nPhone: {{ $('Receive Qualified Lead1').item.json.body.phone }}<br>\nCity: {{ $('Receive Qualified Lead1').item.json.body.city }}<br>\nBudget: {{ $('Receive Qualified Lead1').item.json.body['budget range'] }}<br>\nProperty Type: {{ $('Receive Qualified Lead1').item.json.body['property type'] }}<br>\nLead Score: {{ $('Receive Qualified Lead1').item.json.body.lead_score }}<br><br>\n👉 Action: Call this client immediately.",
+        "subject": "=HOT Lead Detail: {{ $('Receive Qualified Lead').item.json.body.Name }}",
+        "message": "=🔥 HOT LEAD ALERT<br><br>\nClient Name: {{ $('Receive Qualified Lead').item.json.body.Name }}<br>\nPhone: {{ $('Receive Qualified Lead').item.json.body.phone }}<br>\nEmail: {{ $('Workflow Configuration').item.json.Email }}<br>\nCity: {{ $('Receive Qualified Lead').item.json.body.city }}<br>\nBudget: {{ $('Receive Qualified Lead').item.json.body['budget range'] }}<br>\nProperty Type: {{ $('Receive Qualified Lead').item.json.body['property type'] }}<br>\nLead Score: {{ $('Receive Qualified Lead').item.json.body.lead_score }}<br>\nUser message: {{ $('Receive Qualified Lead').item.json.body.user_message ? $('Receive Qualified Lead').item.json.body.user_message : \"User message not write\" }}<br><br>\n👉 Action: Call this client immediately.",
         "options": {}
       },
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        400,
-        624
+        640,
+        0
       ],
-      "id": "bb382131-57bd-4d40-98ca-2bd1e9b5caeb",
-      "name": "Send a message3",
+      "id": "1050655e-4cb0-4782-9e0c-be28221a25db",
+      "name": "Send a message5",
       "webhookId": "0eeaa57c-efa2-4019-8faa-0701214c73f2",
       "credentials": {
         "gmailOAuth2": {
-          "id": "r7ZtcAbKfa1wDFCM",
-          "name": "Gmail account"
+          "id": "9ZjATvpqZlRd4N4E",
+          "name": "Gmail OAuth2 API"
         }
       }
     }
   ],
   "pinData": {},
   "connections": {
-    "COLD Lead Strategy1": {
+    "COLD Lead Strategy": {
       "main": [
         [
           {
-            "node": "Send a message1",
+            "node": "Send a message",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "WARM Lead Strategy1": {
+    "WARM Lead Strategy": {
       "main": [
         [
           {
-            "node": "Send a message2",
+            "node": "Send a message4",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "HOT Lead Strategy1": {
+    "HOT Lead Strategy": {
       "main": [
         [
           {
-            "node": "Send a message3",
+            "node": "Send a message5",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Route by Lead Status1": {
+    "Route by Lead Status": {
       "main": [
         [
           {
-            "node": "HOT Lead Strategy1",
+            "node": "HOT Lead Strategy",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "WARM Lead Strategy1",
+            "node": "WARM Lead Strategy",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "COLD Lead Strategy1",
+            "node": "COLD Lead Strategy",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Workflow Configuration2": {
+    "Workflow Configuration": {
       "main": [
         [
           {
-            "node": "AI Agent1",
+            "node": "Route by Lead Status",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Receive Qualified Lead1": {
+    "Receive Qualified Lead": {
       "main": [
         [
           {
-            "node": "Workflow Configuration2",
+            "node": "Workflow Configuration",
             "type": "main",
             "index": 0
           }
         ]
-      ]
-    },
-    "AI Agent1": {
-      "main": [
-        [
-          {
-            "node": "Route by Lead Status1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "WhatsApp API (Optional)1": {
-      "main": [
-        []
-      ]
-    },
-    "HTTP Request2": {
-      "main": [
-        []
-      ]
-    },
-    "Send a message1": {
-      "main": [
-        []
-      ]
-    },
-    "HTTP Request3": {
-      "main": [
-        []
-      ]
-    },
-    "Merge All Strategies1": {
-      "main": [
-        []
-      ]
-    },
-    "Merge All Strategies": {
-      "main": [
-        []
-      ]
-    },
-    "HTTP Request5": {
-      "main": [
-        []
-      ]
-    },
-    "HTTP Request6": {
-      "main": [
-        []
-      ]
-    },
-    "OpenAI Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Agent1",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Send template": {
-      "main": [
-        []
-      ]
-    },
-    "Send template1": {
-      "main": [
-        []
-      ]
-    },
-    "HTTP Request": {
-      "main": [
-        []
       ]
     }
   },
   "active": true,
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate",
-    "availableInMCP": false
+    "binaryMode": "separate"
   },
-  "versionId": "62ac07bb-5c96-4277-a6f2-8dfaef9c3917",
+  "versionId": "848b7ad0-c089-420d-8c8e-b3b9e0ffcbd1",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "9eb1a08928bea16ca794705a17a5bc2583c09456fb23f5a98c62ffa2e707056c"
+    "instanceId": "8821df3e654b4eb5295b117cdc4e8eb53513fa55dce1fdecf3a3b4c74569403d"
   },
-  "id": "30SifCF7K05U7aaX",
+  "id": "Fj6jOp96mug73fXo",
   "tags": []
 }
